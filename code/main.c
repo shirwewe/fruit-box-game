@@ -1,5 +1,10 @@
 /* This files provides address values that exist in the system */
 
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include <graphics.h>
+
 /* Cyclone V FPGA devices */
 #define LEDR_BASE             0xFF200000
 #define HEX3_HEX0_BASE        0xFF200020
@@ -36,10 +41,6 @@
 #define TRUE 1
 	
 
-
-#include <stdlib.h>
-#include <basket.h>
-
 int resolution_x, resolution_y; 							// VGA screen size
 int sizeof_pixel;						// number of bytes per pixel
 int video_m, video_n;				// number of bits in VGA y coord (m), x coord (n)
@@ -50,12 +51,17 @@ int basket_x_pos;
 int prev_basket_x, prev_basket_y; 	// x, y coordinates of boxes to draw
 int prev_prev_basket_x, prev_prev_basket_y; 	// x, y coordinates of boxes to draw
 
+int fruit_y_pos;
+int fruit_x_pos;
 
+int prev_fruit_x, prev_fruit_y; 	// x, y coordinates of boxes to draw
+int prev_prev_fruit_x, prev_prev_fruit_y; 	// x, y coordinates of boxes to draw
 
 int dx_basket, dy_basket; // amount to move boxes in animation
 int color_box[NUM_BOXES];						// color
 unsigned int color[] = {WHITE, YELLOW, RED, GREEN, BLUE, CYAN, MAGENTA, GREY, PINK, ORANGE};
 int pixel_buffer_start;
+
 
 short int Buffer1[240][512]; // 240 rows, 320 columns + paddings
 short int Buffer2[240][512];
@@ -71,17 +77,19 @@ void initializer();
 void erase_box(int, int);
 void erase_basket(int,int);
 void draw_basket(int, int);
+void draw_fruit(int, int, int, int, int*);
+void erase_fruit(int, int, int, int);
 
 /******************************************************************************
  * This program draws rectangles and boxes on the VGA screen, and moves them
  * in an animated way.
  *****************************************************************************/
-int main(void)
-{
-    int i;
+int main(void){
+
     volatile int * pixel_ctrl_ptr = (int *) PIXEL_BUF_CTRL_BASE; // pixel controller
 	volatile int *LEDR_ptr = LEDR_BASE;
     volatile int *KEY_ptr = KEY_BASE;
+	volatile int *SW_ptr = SW_BASE;
     // declare other variables(not shown)
 	sizeof_pixel = 2; 
 	video_m = 8; // y has 8 bits
@@ -103,21 +111,30 @@ int main(void)
     *(pixel_ctrl_ptr + 1) = (int) &Buffer2;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
     clear_screen();
-	
 	initializer();
 
     while (1)
     {
         /* Erase any boxes and lines that were drawn in the last iteration */
-		
+		erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, WATERMELON_WIDTH, WATERMELON_HEIGHT);
 		erase_basket(prev_prev_basket_x, prev_prev_basket_y);
 		draw_basket(basket_x_pos, basket_y_pos);
+		draw_fruit(fruit_x_pos, fruit_y_pos, WATERMELON_WIDTH, WATERMELON_HEIGHT, watermelon_map);
+		
+		draw_fruit(100, 0, BANANA_WIDTH, BANANA_HEIGHT, banana_map);
+		draw_fruit(200, 0, MANDARIN_WIDTH, MANDARIN_HEIGHT, mandarin_map);
 		
 		prev_prev_basket_x = prev_basket_x;
 		prev_prev_basket_y = prev_basket_y;
-		
 		prev_basket_x = basket_x_pos;
-		prev_basket_y = basket_y_pos;
+		prev_basket_y = basket_y_pos; 
+		
+		
+		prev_prev_fruit_y = prev_fruit_y;
+		prev_prev_fruit_x = prev_fruit_x;
+		
+		prev_fruit_y = fruit_y_pos;
+		prev_fruit_x = fruit_x_pos;
 		
 		int edgecapture_bit = *(KEY_ptr + 3) & 0b11;
 		if(edgecapture_bit == 1){ // if key 0 is pressed
@@ -135,7 +152,45 @@ int main(void)
 			*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
 		}
 		
-			 
+		
+		//if(fruit_x_pos - WATERMELON_WIDTH == basket_x_pos && fruit_y_pos - ){
+		//	continue;
+		//}
+		
+		int SW_value = *(SW_ptr);
+		switch (SW_value) {
+  			case 0b1:
+				fruit_y_pos += 2;
+				if(fruit_y_pos > 240){
+					fruit_y_pos -= 2;
+				}
+    		break;
+  			case 0b10:
+				fruit_y_pos += 4;
+				if(fruit_y_pos > 240){
+					fruit_y_pos -= 4;
+				}
+    		break;
+			case 0b100:
+				fruit_y_pos += 8;
+				if(fruit_y_pos > 240){
+					fruit_y_pos -= 8;
+				}
+    		break;
+			case 0b1000:
+				fruit_y_pos += 16;
+				if(fruit_y_pos > 240){
+					fruit_y_pos -= 16;
+				}
+    		break;
+  			default:
+				fruit_y_pos++;
+				//if(fruit_y_pos > 240){
+					//fruit_y_pos -= 1;
+				//}
+   	
+		}
+		
         wait_for_vsync(); // swap front and back buffers on VGA vertical sync
         pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
 		
@@ -144,17 +199,33 @@ int main(void)
 
 // code for subroutines (not shown)
 
-void draw_basket(int width, int height){
-	for (int i = height ; i < RESOLUTION_Y; i++){ // i is basket height
-		for (int j = width; j < width + BASKET_WIDTH; j++){ // j is basket width
-			plot_pixel(j, i, basket_map[(i-height)*BASKET_WIDTH+(j-width)]);
+void erase_fruit(int x, int y, int fruit_width, int fruit_height){
+	for (int i = y ; i < y + fruit_height; i++){ // i is basket height
+		for (int j = x; j < x + fruit_width; j++){ // j is basket width
+			plot_pixel(j, i, 0);
 		} 
 	}
 }
 
-void erase_basket(int width, int height){
-	for (int i = height ; i < RESOLUTION_Y; i++){ // i is basket height
-		for (int j = width; j < width + BASKET_WIDTH; j++){ // j is basket width
+void draw_basket(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BASKET_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, basket_map[(i-y)*BASKET_WIDTH+(j-x)]);
+		} 
+	}
+}
+
+void draw_fruit(int x, int y, int fruit_width, int fruit_height, int fruit_map[]){
+	for (int i = y ; i < y + fruit_height; i++){ // i is basket height
+		for (int j = x; j < x + fruit_width; j++){ // j is basket width
+			plot_pixel(j, i, fruit_map[(i-y)*fruit_width+(j-x)]);
+		} 
+	}
+}
+
+void erase_basket(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BASKET_WIDTH; j++){ // j is basket width
 			plot_pixel(j, i, 0);
 		} 
 	}
@@ -166,6 +237,11 @@ void initializer(){
 	// initialzies basket start position
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
 	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
+	
+	fruit_y_pos = 0;
+	fruit_x_pos = rand() % (RESOLUTION_X - 1);
+	
+	
 	
 }
 
@@ -319,3 +395,5 @@ void wait_for_vsync(){
 		status = *(pixel_ctrl_ptr + 3);
 	}
 }
+
+
