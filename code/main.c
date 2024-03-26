@@ -34,6 +34,8 @@
 
 #define FALSE 0
 #define TRUE 1
+	
+
 
 #include <stdlib.h>
 #include <basket.h>
@@ -41,11 +43,16 @@
 int resolution_x, resolution_y; 							// VGA screen size
 int sizeof_pixel;						// number of bytes per pixel
 int video_m, video_n;				// number of bits in VGA y coord (m), x coord (n)
-int x_box[NUM_BOXES], y_box[NUM_BOXES]; 	// x, y coordinates of boxes to draw
-int very_old_box_x[NUM_BOXES], very_old_box_y[NUM_BOXES];
-int old_box_x[NUM_BOXES], old_box_y[NUM_BOXES];
 
-int dx_box[NUM_BOXES], dy_box[NUM_BOXES]; // amount to move boxes in animation
+int basket_y_pos;
+int basket_x_pos;
+
+int prev_basket_x, prev_basket_y; 	// x, y coordinates of boxes to draw
+int prev_prev_basket_x, prev_prev_basket_y; 	// x, y coordinates of boxes to draw
+
+
+
+int dx_basket, dy_basket; // amount to move boxes in animation
 int color_box[NUM_BOXES];						// color
 unsigned int color[] = {WHITE, YELLOW, RED, GREEN, BLUE, CYAN, MAGENTA, GREY, PINK, ORANGE};
 int pixel_buffer_start;
@@ -62,7 +69,8 @@ void wait_for_vsync(void);
 void erase_line(int, int, int, int);
 void initializer();
 void erase_box(int, int);
-
+void erase_basket(int,int);
+void draw_basket(int, int);
 
 /******************************************************************************
  * This program draws rectangles and boxes on the VGA screen, and moves them
@@ -72,7 +80,8 @@ int main(void)
 {
     int i;
     volatile int * pixel_ctrl_ptr = (int *) PIXEL_BUF_CTRL_BASE; // pixel controller
-
+	volatile int *LEDR_ptr = LEDR_BASE;
+    volatile int *KEY_ptr = KEY_BASE;
     // declare other variables(not shown)
 	sizeof_pixel = 2; 
 	video_m = 8; // y has 8 bits
@@ -94,40 +103,70 @@ int main(void)
     *(pixel_ctrl_ptr + 1) = (int) &Buffer2;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
     clear_screen();
+	
+	initializer();
 
     while (1)
     {
         /* Erase any boxes and lines that were drawn in the last iteration */
-		int x_size = 97;
-		int y_size = 91;
-		int n = 0;
-		for (int i = 100; i < 191; i++){
-            for (int j = 100; j < 197; j++){ 
-                plot_pixel(j, i, basket_map[(i-100)*x_size+(j-100)]);
-            } 
-        }
-
+		
+		erase_basket(prev_prev_basket_x, prev_prev_basket_y);
+		draw_basket(basket_x_pos, basket_y_pos);
+		
+		prev_prev_basket_x = prev_basket_x;
+		prev_prev_basket_y = prev_basket_y;
+		
+		prev_basket_x = basket_x_pos;
+		prev_basket_y = basket_y_pos;
+		
+		int edgecapture_bit = *(KEY_ptr + 3) & 0b11;
+		if(edgecapture_bit == 1){ // if key 0 is pressed
+			basket_x_pos += 20;
+			if(basket_x_pos > RESOLUTION_X - BASKET_WIDTH){
+				basket_x_pos -= 20;
+			}
+			*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
+		}
+		else if(edgecapture_bit == 2){ // if key 1 is pressed
+			basket_x_pos-= 20;
+			if(basket_x_pos < 0){
+				basket_x_pos+= 20;
+			}
+			*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
+		}
+		
+			 
         wait_for_vsync(); // swap front and back buffers on VGA vertical sync
         pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
-
-		
 		
     }
 }
 
 // code for subroutines (not shown)
-void initializer(){
-	for (int i = 0; i < NUM_BOXES; i++){
-		x_box[i] = rand() % (RESOLUTION_X - 1); // generates a random # from 0 to 318 for x
-		y_box[i] = rand() % (RESOLUTION_Y - 1); // random # from 0 to 238;
-		color_box[i] = color[rand() % 10];
-		dx_box[i] = ((rand() % 2) * 2) - 1; // this will give either -1 or + 1, and tells x direction movement (left or right)
-		dy_box[i] = ((rand() % 2) * 2) - 1; // this will give either -1 or + 1, and tells y direction movement (up or down)
-		very_old_box_x[i] = 0;
-		very_old_box_y[i] = 0;
-		old_box_x[i] = 0;
-		old_box_y[i] = 0;
+
+void draw_basket(int width, int height){
+	for (int i = height ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = width; j < width + BASKET_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, basket_map[(i-height)*BASKET_WIDTH+(j-width)]);
+		} 
 	}
+}
+
+void erase_basket(int width, int height){
+	for (int i = height ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = width; j < width + BASKET_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, 0);
+		} 
+	}
+	
+}
+
+void initializer(){
+
+	// initialzies basket start position
+	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
+	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
+	
 }
 
 void clear_screen(){
@@ -137,6 +176,7 @@ void clear_screen(){
 		}
 	}
 }
+
 
 void get_screen_specs(){
 	resolution_x = RESOLUTION_X;
@@ -279,7 +319,3 @@ void wait_for_vsync(){
 		status = *(pixel_ctrl_ptr + 3);
 	}
 }
-
-
-
-
