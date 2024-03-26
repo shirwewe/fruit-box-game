@@ -3,10 +3,10 @@
 ## Description: 
 The Fruit Box Game is a game where fruit drops at random on the screen and the user uses a basket to catch the fruit. 
 
-**Days Left Till Deadline: 13 DAYS**
+**Days Left Till Deadline: 12 DAYS**
 
 ## Timeline:
-- March 22
+- March 16
   - Drew a basket on the screen
 - March 26
   - KEYS can control basket
