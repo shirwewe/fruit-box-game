@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <graphics.h>
 
+
 /* Cyclone V FPGA devices */
 #define LEDR_BASE             0xFF200000
 #define HEX3_HEX0_BASE        0xFF200020
@@ -56,6 +57,12 @@ int fruit_x_pos;
 
 int prev_fruit_x, prev_fruit_y; 	// x, y coordinates of boxes to draw
 int prev_prev_fruit_x, prev_prev_fruit_y; 	// x, y coordinates of boxes to draw
+
+int ran_num;
+
+int* fruit_map[] = {watermelon_map, orange_map, apple_map, grape_map, peach_map, mandarin_map, banana_map, blueberry_map, strawberry_map};
+int* fruit_width[] = {WATERMELON_WIDTH, ORANGE_WIDTH, APPLE_WIDTH, GRAPE_WIDTH, PEACH_WIDTH, MANDARIN_WIDTH, BANANA_WIDTH, BLUEBERRY_WIDTH, STRAWBERRY_WIDTH};
+int* fruit_height[] = {WATERMELON_HEIGHT, ORANGE_HEIGHT, APPLE_HEIGHT, GRAPE_HEIGHT, PEACH_HEIGHT, MANDARIN_HEIGHT, BANANA_HEIGHT, BLUEBERRY_HEIGHT, STRAWBERRY_HEIGHT};
 
 int dx_basket, dy_basket; // amount to move boxes in animation
 int color_box[NUM_BOXES];						// color
@@ -115,86 +122,91 @@ int main(void){
 
     while (1)
     {
-        /* Erase any boxes and lines that were drawn in the last iteration */
-		erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, WATERMELON_WIDTH, WATERMELON_HEIGHT);
 		erase_basket(prev_prev_basket_x, prev_prev_basket_y);
-		draw_basket(basket_x_pos, basket_y_pos);
-		draw_fruit(fruit_x_pos, fruit_y_pos, WATERMELON_WIDTH, WATERMELON_HEIGHT, watermelon_map);
-		
-		draw_fruit(100, 0, BANANA_WIDTH, BANANA_HEIGHT, banana_map);
-		draw_fruit(200, 0, MANDARIN_WIDTH, MANDARIN_HEIGHT, mandarin_map);
-		
 		prev_prev_basket_x = prev_basket_x;
 		prev_prev_basket_y = prev_basket_y;
 		prev_basket_x = basket_x_pos;
 		prev_basket_y = basket_y_pos; 
 		
-		
+		erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[ran_num], fruit_height[ran_num]);
 		prev_prev_fruit_y = prev_fruit_y;
 		prev_prev_fruit_x = prev_fruit_x;
-		
+
 		prev_fruit_y = fruit_y_pos;
 		prev_fruit_x = fruit_x_pos;
+
 		
-		int edgecapture_bit = *(KEY_ptr + 3) & 0b11;
-		if(edgecapture_bit == 1){ // if key 0 is pressed
-			basket_x_pos += 20;
-			if(basket_x_pos > RESOLUTION_X - BASKET_WIDTH){
-				basket_x_pos -= 20;
+		while(fruit_y_pos < 240){
+	
+			erase_basket(prev_prev_basket_x, prev_prev_basket_y);
+			draw_basket(basket_x_pos, basket_y_pos);
+			prev_prev_basket_x = prev_basket_x;
+			prev_prev_basket_y = prev_basket_y;
+			prev_basket_x = basket_x_pos;
+			prev_basket_y = basket_y_pos; 
+		
+			int edgecapture_bit = *(KEY_ptr + 3) & 0b11;
+			if(edgecapture_bit == 1){ // if key 0 is pressed
+				basket_x_pos += 20;
+				if(basket_x_pos > RESOLUTION_X - BASKET_WIDTH){
+					basket_x_pos -= 20;
+				}
+				*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
 			}
-			*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
-		}
-		else if(edgecapture_bit == 2){ // if key 1 is pressed
-			basket_x_pos-= 20;
-			if(basket_x_pos < 0){
-				basket_x_pos+= 20;
+			else if(edgecapture_bit == 2){ // if key 1 is pressed
+				basket_x_pos-= 20;
+				if(basket_x_pos < 0){
+					basket_x_pos+= 20;
+				}
+				*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
 			}
-			*(KEY_ptr + 3) = 0xFF; // reset edge capture bit
+			/* Erase any fruits and baskets that were drawn in the last iteration */
+			erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[ran_num], fruit_height[ran_num]);
+			draw_fruit(fruit_x_pos, fruit_y_pos, fruit_width[ran_num], fruit_height[ran_num], fruit_map[ran_num]);
+
+		
+			prev_prev_fruit_y = prev_fruit_y;
+			prev_prev_fruit_x = prev_fruit_x;
+
+			prev_fruit_y = fruit_y_pos;
+			prev_fruit_x = fruit_x_pos;
+
+			//if(fruit_x_pos - WATERMELON_WIDTH == basket_x_pos && fruit_y_pos - ){
+			//	continue; this is code for setting fruit in basket
+			
+			int SW_value = *(SW_ptr);
+			switch (SW_value) {
+				case 0b1:
+					fruit_y_pos += 2;
+				break;
+				case 0b10:
+					fruit_y_pos += 4;
+					
+				break;
+				case 0b100:
+					fruit_y_pos += 8;
+					
+				break;
+				case 0b1000:
+					fruit_y_pos += 16;
+				break;
+				default:
+					fruit_y_pos++;
+				break;
+			}
+			wait_for_vsync(); // swap front and back buffers on VGA vertical sync
+			pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
 		}
 		
-		
-		//if(fruit_x_pos - WATERMELON_WIDTH == basket_x_pos && fruit_y_pos - ){
-		//	continue;
-		//}
-		
-		int SW_value = *(SW_ptr);
-		switch (SW_value) {
-  			case 0b1:
-				fruit_y_pos += 2;
-				if(fruit_y_pos > 240){
-					fruit_y_pos -= 2;
-				}
-    		break;
-  			case 0b10:
-				fruit_y_pos += 4;
-				if(fruit_y_pos > 240){
-					fruit_y_pos -= 4;
-				}
-    		break;
-			case 0b100:
-				fruit_y_pos += 8;
-				if(fruit_y_pos > 240){
-					fruit_y_pos -= 8;
-				}
-    		break;
-			case 0b1000:
-				fruit_y_pos += 16;
-				if(fruit_y_pos > 240){
-					fruit_y_pos -= 16;
-				}
-    		break;
-  			default:
-				fruit_y_pos++;
-				//if(fruit_y_pos > 240){
-					//fruit_y_pos -= 1;
-				//}
-   	
+		ran_num++;
+		if(ran_num > 8){
+			ran_num = 0;	
 		}
+		fruit_y_pos = 0;
+		fruit_x_pos = rand() % 8;
 		
-        wait_for_vsync(); // swap front and back buffers on VGA vertical sync
-        pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
-		
-    }
+	}
+	
 }
 
 // code for subroutines (not shown)
@@ -233,11 +245,11 @@ void erase_basket(int x, int y){
 }
 
 void initializer(){
-
+	
+	int ran_num = rand() % 8;
 	// initialzies basket start position
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
 	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
-	
 	fruit_y_pos = 0;
 	fruit_x_pos = rand() % (RESOLUTION_X - 1);
 	
