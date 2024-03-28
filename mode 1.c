@@ -240,8 +240,9 @@ int main(void){
 					draw_bomb(bomb_x[i],bomb_y[i]);
 					bomb_y[i] -= 1;
 			    }	
-                // ****Need to do*****//
+                
                 // need a count score function to test if this actual works
+                // ****Need to do*****//
                 // need an array that store the fruits, and radomly drops from randomly location 
                 // As time goes, boom need to drop faster
 			
