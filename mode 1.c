@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include <graphics.h>
 #include <stdbool.h>
-#include<stdint.h>
+#include <stdint.h>
+#include <string.h>
 
 /* Cyclone V FPGA devices */
 #define LEDR_BASE             0xFF200000
@@ -73,6 +74,20 @@ int pixel_buffer_start;
 
 short int Buffer1[240][512]; // 240 rows, 320 columns + paddings
 short int Buffer2[240][512];
+
+typedef struct {
+	char name[12];
+	int width;
+	int height;
+	int *fruit_image_map;
+} Fruit;
+
+Fruit fruits[] = {
+	{"WATERMELON", 41, 33, watermelon_map},
+	{"BANANA", 39, 40, banana_map},
+	{"MANDARIN", 32, 38, mandarin_map},
+};
+int num_of_fruits = sizeof(fruits) / sizeof(fruits[0]);
 
 void get_screen_specs(void);
 void clear_screen(void);
@@ -137,9 +152,12 @@ int main(void){
 	    int num_of_bombs = 0;
 	    bool game_over = false;
 	    int total_score = 0;
+		int gameTime = 0;
 
         // check if game is over or not
         while (!game_over){
+
+			gameTime++;
 
             /* Erase any boxes and lines that were drawn in the last iteration */
 		    erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, WATERMELON_WIDTH, WATERMELON_HEIGHT);
@@ -217,46 +235,82 @@ int main(void){
    	
 		}
 		
-            wait_for_vsync(); // swap front and back buffers on VGA vertical sync
-            pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
+            // fruit drops
+			if (gameTime % 30 == 0){
+				// generate fruit
+				fruit_x_pos = rand() % RESOLUTION_X;
+				int random_fruit = rand() % num_of_fruits;
+				Fruit drop_this_fruit = fruits[random_fruit];
+				draw_fruit( fruit_x_pos, 0, drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
+			}
+			//As time goes, the num of bombs is increasing by generateing boomb faster
+			if (gameTime % (100 - gameTime / 10) == 0){
+				//generate a bomb
+				int new_bomb_x = rand() % RESOLUTION_X;
+				draw_bomb(new_bomb_x, 0); /// HAS to Change!!!!
+
+				// update the bomb position to the num_of bomb array
+				bomb_x[num_of_bombs] = new_bomb_x; 
+				bomb_y[num_of_bombs] = 0;
+				num_of_bombs ++;
+				//generate a bomb
+			}
 
             //Determine if it catched the fruit
             // 1. check if the fruit reaches the basket level, --> 99!!! has to change
             //         -> if yes, initialize back to 0 which means the fruits wether be catched or lost
-            if(bomb_y[i] == basket_y_pos){ // can the y_pos be an actual real constant number?
-				bomb_y[i] = 0;
+			for (int i = 0; i <= num_of_bombs; i++){
+
+            	if(bomb_y[i] == BASKET_HEIGHT){ 
+					bomb_y[i] = 0;
 				
-				//2. check if it catched the bomb
-                // if the position of the bomb >= the postion of the left basket && <= the postion of right point of the basket, game over
-				if(basket_x_pos <= bomb_x[i] && (basket_x_pos+BASKET_WIDTH) >= bomb_x[i]){ //check the postion!!!!!!
+					//2. check if it catched the bomb
+                	// if the position of the bomb >= the postion of the left basket && <= the postion of right point of the basket, game over
+					// if over 1/2 of the bomb fall in the basket, game over
+					if(basket_x_pos < (bomb_x[i] + 0.5*(BOMB_WIDTH)) && 
+						(basket_x_pos + BASKET_WIDTH) > (bomb_x[i] + 0.5*(BOMB_WIDTH))){ //check the postion!!!!!!
 					//the bomb is catched
 					//call function to draw game over
-					draw_game_over();
-					game_over = true;
-					break;
+						draw_game_over();
+						game_over = true;
+						break;
+					}	
+                	// else if not reached to the basket
+                	else if(bomb_y[i] < (RESOLUTION_Y - BASKET_HEIGHT)){
+						draw_bomb(bomb_x[i],bomb_y[i], bomb_width, bomb_height, bomb_map);// CHange this!!!
+						bomb_y[i] += 1;
+			    	}		
+				
 				}
-                // else if not reached to the basket
-                else if(bomb_y[i] >basket_y_pos){
-					draw_bomb(bomb_x[i],bomb_y[i]);
-					bomb_y[i] -= 1;
-			    }	
-                
-                // need a count score function to test if this actual works
-                // ****Need to do*****//
-                // need an array that store the fruits, and radomly drops from randomly location 
-                // As time goes, boom need to drop faster
-			
-					
 			}
-			
-		}
-            //As time goes, the num of bombs is increasing 
 
-        
+			for (int i = 0; i <= num_of_fruits; i++){
+				if (fruit_y_pos[i] == BASKET_HEIGHT){// check when fruits gets to the basket
+					if ((fruit_x_pos[i] >= basket_x_pos && 
+						fruit_x_pos[i] <= (basket_x_pos + BASKET_WIDTH)){
+						total_score +=1;
+						printf ("Score: %d \n", total_score);
+					}
+					else if(fruit_y_pos[i] < (RESOLUTION_Y - BASKET_HEIGHT)){
+						draw_fruit( fruit_x_pos, fruit_y_pos, drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
+						fruit_y_pos[i] += 1;
+			    	}	
+				}
+			}
+			              
+            // need a count score function to test if this actual works
+            // need an array that store the fruits, and radomly drops from randomly location 
+        	// all in a for loop, need to keep track on the time, need to decide how the bomb can be change with the time goes
+			
+
+
+			wait_for_vsync(); // swap front and back buffers on VGA vertical sync
+        	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer	
+		}
     }
 }
 
-// code for subroutines (not shown)
+
 
 void erase_fruit(int x, int y, int fruit_width, int fruit_height){
 	for (int i = y ; i < y + fruit_height; i++){ // i is basket height
@@ -282,11 +336,11 @@ void draw_fruit(int x, int y, int fruit_width, int fruit_height, int fruit_map[]
 	}
 }
 
-// has to change..
-void draw_bomb (int x, int y, int fruit_width, int fruit_height, int fruit_map[]){
-    for (int i = y ; i < y + fruit_height; i++){ // i is basket height
-		for (int j = x; j < x + fruit_width; j++){ // j is basket width
-			plot_pixel(j, i, fruit_map[(i-y)*fruit_width+(j-x)]);
+// has to change.. // 
+void draw_bomb (int x, int y, int bomb_width, int bomb_height, int bomb_map[]){
+    for (int i = y ; i < y + bomb_height; i++){ // i is basket height
+		for (int j = x; j < x + bomb_width; j++){ // j is basket width
+			plot_pixel(j, i, bomb_map[(i-y)*bomb_width+(j-x)]);
 		} 
 	}
 }
