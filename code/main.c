@@ -1,11 +1,12 @@
+
+#include <graphics.h>
 /* This files provides address values that exist in the system */
 
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include <graphics.h>
 
-
+ 
 
 /* Cyclone V FPGA devices */
 #define LEDR_BASE             0xFF200000
@@ -64,7 +65,7 @@ do { dest = __builtin_rdctl(5); } while (0)
 #define FALSE 0
 #define TRUE 1
 	
-#define COUNTER_VALUE 50000
+#define COUNTER_VALUE 500000000
 	
 
 int resolution_x, resolution_y; 							// VGA screen size
@@ -116,7 +117,7 @@ void erase_basket(int,int);
 void draw_basket(int, int);
 void draw_fruit(int, int, int, int, int*);
 void erase_fruit(int, int, int, int);
-//void config_timer(void);
+void config_timer(void);
 //void interrupt_handler(void);
 //void TIMER_ISR(void);
 
@@ -130,7 +131,7 @@ int main(void){
 	volatile int *LEDR_ptr = LEDR_BASE;
     volatile int *KEY_ptr = KEY_BASE;
 	volatile int *SW_ptr = SW_BASE;
-    // declare other variables(not shown)
+  
 	sizeof_pixel = 2; 
 	video_m = 8; // y has 8 bits
 	video_n = 9; // x has 9 bits
@@ -152,7 +153,7 @@ int main(void){
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
     clear_screen();
 	initializer();
-	//config_timer();
+	config_timer();
 	srand(time(0));
 	
 	/* set interrupt mask bits for levels 0 (interval timer)  */
@@ -186,7 +187,13 @@ int main(void){
 		//update next fruit location due to timer
 		fruit_y_pos = fruit_y_pos + drop_speed;
 		
+		int TO_bit = *TIMER_ptr;
 		
+		if (*(TIMER_ptr) & 0x1 == 1){
+			*TIMER_ptr = 0; //reset t0
+			drop_speed++;
+			printf("%d",1);
+		}
 		// if a catch is registered
 		
 		if(fruit_x_pos > basket_x_pos && fruit_x_pos < basket_x_pos + BASKET_WIDTH && fruit_y_pos == RESOLUTION_Y - BASKET_HEIGHT){
@@ -282,13 +289,13 @@ int main(void){
 
 // code for subroutines (not shown)
 
-/*void config_timer(){
+void config_timer(){
 	volatile int *TIMER_ptr = (int *) TIMER_BASE;
 	*(TIMER_ptr) = 0; //Resetting TO
 	*(TIMER_ptr + 2) = COUNTER_VALUE & 0xFFFF;
 	*(TIMER_ptr + 3) = (COUNTER_VALUE >> 16) & 0xFFFF;
-	*(TIMER_ptr + 1) = 0b0000; // turns on start, cont, and interrupt
-}*/
+	*(TIMER_ptr + 1) = 0b0110; // turns on start, cont, and interrupt
+}
 
 
 void erase_fruit(int x, int y, int fruit_width, int fruit_height){
@@ -489,7 +496,6 @@ void wait_for_vsync(){
 }
 
 // interrupt code that i cant figure out
-
 
 /*
 void interrupt_handler(){
