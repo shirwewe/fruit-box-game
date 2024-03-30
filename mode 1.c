@@ -15,14 +15,14 @@
 #include <string.h>
 
 /* Cyclone V FPGA devices */
-#define LEDR_BASE             0xFF200000
-#define HEX3_HEX0_BASE        0xFF200020
-#define HEX5_HEX4_BASE        0xFF200030
-#define SW_BASE               0xFF200040
-#define KEY_BASE              0xFF200050
-#define TIMER_BASE            0xFF202000
-#define PIXEL_BUF_CTRL_BASE   0xFF203020
-#define CHAR_BUF_CTRL_BASE    0xFF203030
+#define LEDR_BASE             ((volatile int *)0xFF200000)
+#define HEX3_HEX0_BASE        ((volatile int *)0xFF200020)
+#define HEX5_HEX4_BASE        ((volatile int *)0xFF200030)
+#define SW_BASE               ((volatile int *)0xFF200040)
+#define KEY_BASE              ((volatile int *)0xFF200050)
+#define TIMER_BASE            ((volatile int *)0xFF202000)
+#define PIXEL_BUF_CTRL_BASE   ((volatile int *)0xFF203020)
+#define CHAR_BUF_CTRL_BASE    ((volatile int *)0xFF203030)
 
 /* VGA colors */
 #define WHITE 0xFFFF
@@ -60,9 +60,6 @@ int basket_x_pos;
 int prev_basket_x, prev_basket_y; 	// x, y coordinates of boxes to draw
 int prev_prev_basket_x, prev_prev_basket_y; 	// x, y coordinates of boxes to draw
 
-int fruit_y_pos;
-int fruit_x_pos;
-
 int prev_fruit_x, prev_fruit_y; 	// x, y coordinates of boxes to draw
 int prev_prev_fruit_x, prev_prev_fruit_y; 	// x, y coordinates of boxes to draw
 
@@ -86,6 +83,12 @@ Fruit fruits[] = {
 	{"WATERMELON", 41, 33, watermelon_map},
 	{"BANANA", 39, 40, banana_map},
 	{"MANDARIN", 32, 38, mandarin_map},
+	{"APPLE",27, 25, apple_map},
+	{"BLUEBERRY", 16, 20, blueberry_map},
+	{"GRAPE", 30, 26, grape_map},
+	{"ORANGE", 19, 40, orange_map},
+	{"PEACH", 32, 33, peach_map},
+	{"STRAWBERRY", 18, 14, strawberry_map}
 };
 int num_of_fruits = sizeof(fruits) / sizeof(fruits[0]);
 
@@ -102,6 +105,8 @@ void erase_basket(int,int);
 void draw_basket(int, int);
 void draw_fruit(int, int, int, int, int*);
 void erase_fruit(int, int, int, int);
+void draw_bomb (int x, int y);
+
 
 /******************************************************************************
  * This program draws rectangles and boxes on the VGA screen, and moves them
@@ -145,6 +150,8 @@ int main(void){
 	    // create an array bomb_x[] for each bomb's x value
 	    int bomb_x[300] = {0};
 	    int bomb_y[300] = {0};
+		int fruit_x_pos[num_of_fruits]; 
+    	int fruit_y_pos[num_of_fruits];
 
         srand(time(NULL)); //check this!!!!!!
 
@@ -233,15 +240,19 @@ int main(void){
 					//fruit_y_pos -= 1;
 				//}
    	
-		}
+			}
 		
             // fruit drops
 			if (gameTime % 30 == 0){
 				// generate fruit
-				fruit_x_pos = rand() % RESOLUTION_X;
+				int fruit_x = rand() % RESOLUTION_X;
+				int fruit_y = 0;
 				int random_fruit = rand() % num_of_fruits;
 				Fruit drop_this_fruit = fruits[random_fruit];
-				draw_fruit( fruit_x_pos, 0, drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
+				draw_fruit( fruit_x, fruit_y, drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
+				fruit_x_pos[random_fruit] = fruit_x;
+				fruit_y_pos[random_fruit] = fruit_y;
+
 			}
 			//As time goes, the num of bombs is increasing by generateing boomb faster
 			if (gameTime % (100 - gameTime / 10) == 0){
@@ -271,13 +282,13 @@ int main(void){
 						(basket_x_pos + BASKET_WIDTH) > (bomb_x[i] + 0.5*(BOMB_WIDTH))){ //check the postion!!!!!!
 					//the bomb is catched
 					//call function to draw game over
-						draw_game_over();
+						//draw_game_over();
 						game_over = true;
 						break;
 					}	
                 	// else if not reached to the basket
                 	else if(bomb_y[i] < (RESOLUTION_Y - BASKET_HEIGHT)){
-						draw_bomb(bomb_x[i],bomb_y[i], bomb_width, bomb_height, bomb_map);// CHange this!!!
+						draw_bomb(bomb_x[i], bomb_y[i]);// CHange this!!!
 						bomb_y[i] += 1;
 			    	}		
 				
@@ -292,7 +303,7 @@ int main(void){
 						printf ("Score: %d \n", total_score);
 					}
 					else if(fruit_y_pos[i] < (RESOLUTION_Y - BASKET_HEIGHT)){
-						draw_fruit( fruit_x_pos, fruit_y_pos, drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
+						draw_fruit( fruit_x_pos[i], fruit_y_pos[i], drop_this_fruit.width, drop_this_fruit.height, drop_this_fruit.fruit_image_map);
 						fruit_y_pos[i] += 1;
 			    	}	
 				}
@@ -336,19 +347,20 @@ void draw_fruit(int x, int y, int fruit_width, int fruit_height, int fruit_map[]
 	}
 }
 
-// has to change.. // 
-void draw_bomb (int x, int y, int bomb_width, int bomb_height, int bomb_map[]){
-    for (int i = y ; i < y + bomb_height; i++){ // i is basket height
-		for (int j = x; j < x + bomb_width; j++){ // j is basket width
-			plot_pixel(j, i, bomb_map[(i-y)*bomb_width+(j-x)]);
+
+void draw_bomb(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BOMB_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, bomb_map[(i-y)*BOMB_WIDTH+(j-x)]);
 		} 
 	}
 }
 
+/*
 void draw_game_over(){
 
 }
-
+*/
 
 void erase_basket(int x, int y){
 	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
@@ -365,8 +377,8 @@ void initializer(){
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
 	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
 	
-	fruit_y_pos = 0;
-	fruit_x_pos = rand() % (RESOLUTION_X - 1);
+	fruit_y_pos[num_of_fruits] = 0;
+	fruit_x_pos[num_of_fruits] = rand() % (RESOLUTION_X - 1);
 	
 	
 	
