@@ -106,6 +106,7 @@ void draw_basket(int, int);
 void draw_fruit(int, int, int, int, int*);
 void erase_fruit(int, int, int, int);
 void draw_bomb (int x, int y);
+void erase_bomb(int x, int y);
 
 
 /******************************************************************************
@@ -176,11 +177,13 @@ int main(void){
 
 			gameTime++;
 			
-			for (int i = 0; i < num_of_fruits; i++) {
+			for (int i = 0; i < total_fruit_dropped; i++) {
         		erase_fruit(prev_fruit_x[i], prev_fruit_y[i], fruits[i].width, fruits[i].height);
     		}
 			erase_basket(prev_prev_basket_x, prev_prev_basket_y);
+			erase_bomb(prev_prev_bomb_x, prev_prev_bomb_y); // has to change
 		    draw_basket(basket_x_pos, basket_y_pos);
+			draw_bomb(bomb_x, bomb_y); // Has to change
 			
 			prev_prev_basket_x = prev_basket_x;
     		prev_prev_basket_y = prev_basket_y;
@@ -365,4 +368,227 @@ int main(void){
         	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer	
 		}
     
+}
+
+
+
+void erase_fruit(int x, int y, int fruit_width, int fruit_height){
+	for (int i = y ; i < y + fruit_height; i++){ // i is basket height
+		for (int j = x; j < x + fruit_width; j++){ // j is basket width
+			plot_pixel(j, i, 0);
+		} 
+	}
+}
+
+void draw_basket(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BASKET_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, basket_map[(i-y)*BASKET_WIDTH+(j-x)]);
+		} 
+	}
+}
+
+void draw_fruit(int x, int y, int fruit_width, int fruit_height, int fruit_map[]){
+	for (int i = y ; i < y + fruit_height; i++){ // i is basket height
+		for (int j = x; j < x + fruit_width; j++){ // j is basket width
+			plot_pixel(j, i, fruit_map[(i-y)*fruit_width+(j-x)]);
+		} 
+	}
+	printf("draw fruit exist \n");
+}
+
+
+void draw_bomb(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BOMB_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, bomb_map[(i-y)*BOMB_WIDTH+(j-x)]);
+		} 
+	}
+}
+
+/*
+void draw_game_over(){
+
+}
+*/
+
+void erase_basket(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BASKET_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, 0);
+		} 
+	}
+	
+}
+
+void erase_bomb(int x, int y){
+	for (int i = y ; i < RESOLUTION_Y; i++){ // i is basket height
+		for (int j = x; j < x + BOMB_WIDTH; j++){ // j is basket width
+			plot_pixel(j, i, 0);
+		} 
+	}
+	
+}
+
+void initializer(){
+
+	// initialzies basket start position
+	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
+	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
+	
+	//int fruit_y_pos[num_of_fruits] = {0};
+	//int fruit_x_pos[num_of_fruits] = {0};
+	
+}
+
+void clear_screen(){
+	for (int x = 0; x < resolution_x; x++){
+		for(int y = 0; y < resolution_y; y++){
+			plot_pixel(x, y, 0);
+		}
+	}
+}
+
+void get_screen_specs(){
+	resolution_x = RESOLUTION_X;
+	resolution_y = RESOLUTION_Y;
+}
+
+void plot_pixel(int x, int y, short int color) {
+    int shift_x, shift_y;
+    shift_x = sizeof_pixel - 1; // shift x address bits by sizeof(pixel)
+    shift_y = video_n + (sizeof_pixel - 1); // shift y address by |x address| + sizeof(pixel)
+    // 计算内存地址时确保不越界
+    if (x >= 0 && x < resolution_x && y >= 0 && y < resolution_y) {
+        *(short int *)(pixel_buffer_start + (y << shift_y) + (x << shift_x)) = color;
+    }
+}
+
+void draw_line(int x0, int y0, int x1, int y1, int colour){
+	int temp, y_step;
+	int is_steep = ABS(y1 - y0) > ABS(x1 - x0);
+	if(is_steep){
+		temp = x0;
+		x0 = y0;
+		y0 = temp;
+	
+		temp = x1;
+		x1 = y1;
+		y1 = temp;
+	}
+	
+	if(x0 > x1){
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+		
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+	}
+	
+	int delta_x = x1 - x0;
+	int delta_y = ABS(y1 - y0);
+	int error = -(delta_x/2);
+	int y = y0;
+	
+	if (y < y1){
+		y_step = 1;
+	}
+	
+	else{
+		y_step = -1;
+	}
+	
+	for (int x = x0; x < x1; x++){
+		if (is_steep){
+			plot_pixel(y, x, colour);
+		}
+		else{
+			plot_pixel(x, y, colour);	
+		}
+		error = error + delta_y;
+		if(error > 0){
+			y = y + y_step;
+			error = error - delta_x;
+		}
+	}	
+}
+
+void erase_line(int x0, int y0, int x1, int y1){
+	int temp, y_step;
+	int is_steep = ABS(y1 - y0) > ABS(x1 - x0);
+	if(is_steep){
+		temp = x0;
+		x0 = y0;
+		y0 = temp;
+	
+		temp = x1;
+		x1 = y1;
+		y1 = temp;
+	}
+	
+	if(x0 > x1){
+		temp = x0;
+		x0 = x1;
+		x1 = temp;
+		
+		temp = y0;
+		y0 = y1;
+		y1 = temp;
+	}
+	
+	int delta_x = x1 - x0;
+	int delta_y = ABS(y1 - y0);
+	int error = -(delta_x/2);
+	int y = y0;
+	
+	if (y < y1){
+		y_step = 1;
+	}
+	
+	else{
+		y_step = -1;
+	}
+	
+	for (int x = x0; x < x1; x++){
+		if (is_steep){
+			plot_pixel(y, x, 0);
+		}
+		else{
+			plot_pixel(x, y, 0);	
+		}
+		error = error + delta_y;
+		if(error > 0){
+			y = y + y_step;
+			error = error - delta_x;
+		}
+	}	
+}
+
+void draw_box(int x0, int y0, short int colour){
+	plot_pixel(x0, y0, colour);
+	plot_pixel(x0 + 1, y0, colour);
+	plot_pixel(x0, y0 + 1, colour);
+	plot_pixel(x0 + 1, y0 + 1, colour);
+
+}
+
+void erase_box(int x0, int y0){
+	plot_pixel(x0, y0, 0);
+	plot_pixel(x0 + 1, y0, 0);
+	plot_pixel(x0, y0 + 1, 0);
+	plot_pixel(x0 + 1, y0 + 1, 0);
+
+}
+
+void wait_for_vsync(){
+	volatile int *pixel_ctrl_ptr = (int*)PIXEL_BUF_CTRL_BASE;
+	int status;
+	*pixel_ctrl_ptr = 1; // this will start the sync process, write 1 into the front buf
+	status = *(pixel_ctrl_ptr + 3);
+	
+	while((status & 0x01) != 0){ // polling the status bit, the status bit will turn to 0 when front buffer is done rendering
+		status = *(pixel_ctrl_ptr + 3);
+	}
 }
