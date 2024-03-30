@@ -3,17 +3,40 @@
 ## Description: 
 The Fruit Box Game is a game where fruit drops at random on the screen and the user uses a basket to catch the fruit. 
 
-**Days Left Till Deadline: 13 DAYS**
+**Days Left Till Deadline: 9 DAYS**
 
 ## Timeline:
-- March 22
+- March 16
   - Drew a basket on the screen
-- March 26
+- March 25
   - KEYS can control basket
   - Made watermelon, mandarin, banana sprite
   - Fruit can drop (not loop), SW can change speed
     
-    ![image](https://github.com/shirwewe/fruit-box-game/assets/129631836/5c111a28-9bd4-4f5b-bca5-fa1222c6a3b1)
+     ![image](https://github.com/shirwewe/fruit-box-game/assets/129631836/e2a8237d-763c-4fb7-94b4-0370ef439882)
+- March 26
+  - Fruit drops in a loop
+  - Funny erasing mechanism
+  - swaps to next fruit after hitting bottom
+  - added more fruit and bomb
+ 
+    ![3-26-2024 (23-45-23)](https://github.com/shirwewe/fruit-box-game/assets/129631836/bdcb4c1b-4da1-4e32-b43b-94ff6d241b84)
+    
+- March 29
+  - Game mode fruit frenzy complete
+  - Fruit moves faster as time goes on
+  - missing three fruit -> game over
+
+    ![3-29-2024 (23-27-07)](https://github.com/shirwewe/fruit-box-game/assets/129631836/bb504824-2cf8-4d03-a8bb-55b026d48eaf)
+
+
+ 
+    
+    
+   
+
+    
+    
 
     
 
