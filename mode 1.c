@@ -60,6 +60,9 @@ int basket_x_pos;
 int prev_basket_x, prev_basket_y; 	// x, y coordinates of boxes to draw
 int prev_prev_basket_x, prev_prev_basket_y; 	// x, y coordinates of boxes to draw
 
+int prev_bomb_x, prev_bomb_y;
+int prev_prev_bomb_x, prev_prev_bomb_y;
+
 int prev_fruit_x, prev_fruit_y; 	// x, y coordinates of boxes to draw
 int prev_prev_fruit_x, prev_prev_fruit_y; 	// x, y coordinates of boxes to draw
 
@@ -189,6 +192,11 @@ int main(void){
     		prev_prev_basket_y = prev_basket_y;
     		prev_basket_x = basket_x_pos;
     		prev_basket_y = basket_y_pos;
+
+			prev_prev_bomb_x = prev_bomb_x;
+    		prev_prev_bomb_y = prev_bomb_y;
+    		prev_bomb_x = bomb_x;
+    		prev_bomb_y = bomb_y;
 			
 			for (int i = 0; i < num_of_fruits; i++) {
     			prev_fruit_x[i] = fruit_x_pos[i];
