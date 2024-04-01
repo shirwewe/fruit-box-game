@@ -96,8 +96,8 @@ int empty_x_x_pos, empty_x_y_pos;
 int redx_x_pos, redx_y_pos;
 
 int* fruit_map[] = {watermelon_map, orange_map, apple_map, grape_map, peach_map, mandarin_map, banana_map, blueberry_map, strawberry_map};
-int* fruit_width[] = {WATERMELON_WIDTH, ORANGE_WIDTH, APPLE_WIDTH, GRAPE_WIDTH, PEACH_WIDTH, MANDARIN_WIDTH, BANANA_WIDTH, BLUEBERRY_WIDTH, STRAWBERRY_WIDTH};
-int* fruit_height[] = {WATERMELON_HEIGHT, ORANGE_HEIGHT, APPLE_HEIGHT, GRAPE_HEIGHT, PEACH_HEIGHT, MANDARIN_HEIGHT, BANANA_HEIGHT, BLUEBERRY_HEIGHT, STRAWBERRY_HEIGHT};
+int fruit_width[] = {WATERMELON_WIDTH, ORANGE_WIDTH, APPLE_WIDTH, GRAPE_WIDTH, PEACH_WIDTH, MANDARIN_WIDTH, BANANA_WIDTH, BLUEBERRY_WIDTH, STRAWBERRY_WIDTH};
+int fruit_height[] = {WATERMELON_HEIGHT, ORANGE_HEIGHT, APPLE_HEIGHT, GRAPE_HEIGHT, PEACH_HEIGHT, MANDARIN_HEIGHT, BANANA_HEIGHT, BLUEBERRY_HEIGHT, STRAWBERRY_HEIGHT};
 
 int dx_basket, dy_basket; // amount to move basket
 int color_box[NUM_BOXES];						// color
@@ -135,9 +135,9 @@ void draw_red_x(int, int);
 int main(void){
 	volatile int *TIMER_ptr = (int *) TIMER_BASE;
     volatile int * pixel_ctrl_ptr = (int *) PIXEL_BUF_CTRL_BASE; // pixel controller
-	volatile int *LEDR_ptr = LEDR_BASE;
-    volatile int *KEY_ptr = KEY_BASE;
-	volatile int *SW_ptr = SW_BASE;
+	volatile int *LEDR_ptr = (int *)LEDR_BASE;
+    volatile int *KEY_ptr = (int *)KEY_BASE;
+	volatile int *SW_ptr = (int *)SW_BASE;
   
 	sizeof_pixel = 2; 
 	video_m = 8; // y has 8 bits
@@ -218,7 +218,7 @@ int main(void){
 		//update next fruit location due to timer
 		fruit_y_pos = fruit_y_pos + drop_speed;
 		
-		if (*(TIMER_ptr) & 0x1 == 1){
+		if ((*(TIMER_ptr) & 0x1) == 1){
 			*TIMER_ptr = 0; //reset t0
 			drop_speed++;
 		}
