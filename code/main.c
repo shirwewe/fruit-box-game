@@ -1,4 +1,5 @@
 #include <graphics.h>
+#include <audio.h>
 /* This files provides address values that exist in the system */
 
 
@@ -97,6 +98,11 @@ int missed_fruit;
 int survival;
 
 int total_score;
+int hight_score;
+int second_score;
+int third_score;
+int fourth_score;
+int fifth_score;
 
 int empty_x_x_pos, empty_x_y_pos;
 int redx_x_pos, redx_y_pos;
@@ -110,6 +116,18 @@ int color_box[NUM_BOXES];						// color
 unsigned int color[] = {WHITE, YELLOW, RED, GREEN, BLUE, CYAN, MAGENTA, GREY, PINK, ORANGE};
 int pixel_buffer_start;
 int character_buffer_start;
+
+struct audio_t {
+	volatile unsigned int control;
+	volatile unsigned char rarc;
+	volatile unsigned char ralc;
+	volatile unsigned char wsrc;
+	volatile unsigned char wslc;
+    volatile unsigned int ldata;
+	volatile unsigned int rdata;
+};
+
+struct audio_t *const audiop = ((struct audio_t *)0xff203040);
 
 
 short int Buffer1[240][512]; // 240 rows, 320 columns + paddings
@@ -137,6 +155,7 @@ void display_HEX(int);
 void draw_start_page(void);
 void replace_survival(int, int);
 void replace_fruit_fren(int, int);
+void audio_playback_mono(int*, int, int);
 //void interrupt_handler(void);
 //void TIMER_ISR(void);
 
@@ -186,6 +205,8 @@ int main(void){
 	
 	//LAUNCH PAGE
 	int KEY0 = 1;
+	int i = 0;
+	int playback_length = samples_n/4;
 	while(KEY0){
 		draw_start_page();
 		while(1){
@@ -206,9 +227,14 @@ int main(void){
 			}
 			break;
 		}
+		
 		wait_for_vsync(); // swap front and back buffers on VGA vertical sync
 		pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
-		
+		audio_playback_mono(starting_audio, playback_length, i);
+		i += playback_length;
+		if (i > samples_n){
+			i = 0;
+		}
 	}
     clear_screen();
 	wait_for_vsync();
@@ -380,6 +406,11 @@ void initializer(){
 	empty_x_y_pos = 5;
 	redx_x_pos = 300;
 	redx_y_pos = 5;
+	int hight_score = 0;
+	int second_score = 0;
+	int third_score = 0;
+	int fourth_score = 0;
+	int fifth_score = 0;
 	
 }
 
@@ -417,6 +448,20 @@ void display_HEX(int num){
 	*(HEX3_0_ptr) = result_3_0;
 	*(HEX5_4_ptr) = result_5_4;
 }
+
+void audio_playback_mono(int* samples, int duration, int start) {
+			int length = start;
+			audiop->control = 0b1100; // clear the output and input FIFOs
+            audiop->control = 0x0; // resume input conversion
+            while(start < length + duration) {
+              // output data if there is space in the output FIFOs
+              if ((audiop->wsrc != 0) && (audiop->wslc != 0)) {
+                  audiop->ldata = samples[start];
+                  audiop->rdata = samples[start];
+				  start++;
+              }
+            }
+}	
 
 void config_timer(){
 	volatile int *TIMER_ptr = (int *) TIMER_BASE;
