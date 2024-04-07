@@ -1,4 +1,3 @@
-
 #include <graphics.h>
 /* This files provides address values that exist in the system */
 
@@ -65,7 +64,7 @@ do { dest = __builtin_rdctl(5); } while (0)
 #define FALSE 0
 #define TRUE 1
 	
-#define COUNTER_VALUE 500000000
+#define COUNTER_VALUE 50000000000
 	
 
 int resolution_x, resolution_y; 							// VGA screen size
@@ -125,6 +124,7 @@ void erase_fruit(int, int, int, int);
 void config_timer(void);
 void draw_game_over(void);
 void draw_red_x(int, int);
+void display_HEX(int);
 //void interrupt_handler(void);
 //void TIMER_ISR(void);
 
@@ -138,6 +138,9 @@ int main(void){
 	volatile int *LEDR_ptr = (int *)LEDR_BASE;
     volatile int *KEY_ptr = (int *)KEY_BASE;
 	volatile int *SW_ptr = (int *)SW_BASE;
+	volatile int *HEX3_0_ptr = (int *)HEX3_HEX0_BASE;
+	volatile int *HEX5_4_ptr = (int *)HEX5_HEX4_BASE;
+	
   
 	sizeof_pixel = 2; 
 	video_m = 8; // y has 8 bits
@@ -162,6 +165,8 @@ int main(void){
 	initializer();
 	config_timer();
 	srand(time(0));
+	*(HEX3_0_ptr) = 0x3F;
+	*(HEX5_4_ptr) = 0;
 	
 	/* set interrupt mask bits for levels 0 (interval timer)  */
 	//NIOS2_WRITE_IENABLE(0x0);
@@ -189,6 +194,7 @@ int main(void){
 		// draws new basket and fruit location
 		draw_basket(basket_x_pos, basket_y_pos);
 		draw_fruit(fruit_x_pos, fruit_y_pos, fruit_width[rand_fruit], fruit_height[rand_fruit], fruit_map[rand_fruit]);
+		
 		// draws x's
 		if (missed_fruit == 0){
 			draw_empty_x(empty_x_x_pos, empty_x_y_pos);
@@ -197,19 +203,18 @@ int main(void){
 		}
 		else if (missed_fruit == 1){
 			draw_red_x(redx_x_pos, redx_y_pos);
-			//draw_empty_x(empty_x_x_pos + 2 * EMPTY_X_WIDTH, empty_x_y_pos);
-			//draw_empty_x(empty_x_x_pos + 3 * EMPTY_X_WIDTH, empty_x_y_pos);
+			*(LEDR_ptr) = 0b1;
 		}
 		else if(missed_fruit == 2){
 			draw_red_x(redx_x_pos, redx_y_pos);
 			draw_red_x(redx_x_pos, redx_y_pos + RED_X_HEIGHT);
-			//draw_empty_x(empty_x_x_pos + 3 * EMPTY_X_WIDTH, empty_x_y_pos);	
+			*(LEDR_ptr) = 0b11;
 		}
 		else if(missed_fruit == 3){
 			draw_red_x(redx_x_pos, redx_y_pos);
 			draw_red_x(redx_x_pos, redx_y_pos + RED_X_HEIGHT);
 			draw_red_x(redx_x_pos, redx_y_pos + 2 * RED_X_HEIGHT);
-			
+			*(LEDR_ptr) = 0b111;
 		}
 		else if(missed_fruit == 4){
 		//	draw_game_over();
@@ -225,7 +230,9 @@ int main(void){
 		// if a catch is registered
 		
 		if(fruit_x_pos > basket_x_pos && fruit_x_pos < basket_x_pos + BASKET_WIDTH && fruit_y_pos == RESOLUTION_Y - BASKET_HEIGHT){
-			total_score++;
+			total_score += 100;
+			printf("The total score is: %d\n ", total_score);
+			display_HEX(total_score);
 			erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[prev_prev_rand_fruit], fruit_height[prev_prev_rand_fruit]);
 			erase_fruit(prev_fruit_x, prev_fruit_y, fruit_width[prev_rand_fruit], fruit_height[prev_rand_fruit]);
 			erase_fruit(fruit_x_pos, fruit_y_pos, fruit_width[rand_fruit], fruit_height[rand_fruit]);
@@ -233,7 +240,7 @@ int main(void){
 			rand_fruit = rand() % 8;	
 			fruit_y_pos = 0;
 			fruit_x_pos = rand() % (RESOLUTION_X - 1);
-			continue;
+			//continue;
 
 		}
 		
@@ -247,13 +254,10 @@ int main(void){
 			rand_fruit = rand() % 8;	
 			fruit_y_pos = 0;
 			fruit_x_pos = rand() % (RESOLUTION_X - 1);
-			printf("%d\n", 0);
 			
 		}
-		
-		
 			
-		// code that controls the switches
+		// code that controls the keys
 		int edgecapture_bit = *(KEY_ptr + 3) & 0b11;
 		if(edgecapture_bit == 1){ // if key 0 is pressed
 			basket_x_pos += 40;
@@ -315,6 +319,12 @@ int main(void){
 				}
 				break;
 		}*/
+		
+		// updates score
+		
+		//printf("%d", total_score);
+		
+		
 
 		wait_for_vsync(); // swap front and back buffers on VGA vertical sync
 		pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer	
@@ -329,7 +339,6 @@ int main(void){
 
 
 void initializer(){
-	
 	rand_fruit = rand() % 8;
 	// initialzies basket start position
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
@@ -345,6 +354,47 @@ void initializer(){
 	redx_y_pos = 5;
 	
 }
+
+void display_HEX(int num){
+	volatile int *HEX3_0_ptr = (int *)HEX3_HEX0_BASE;
+	volatile int *HEX5_4_ptr = (int *)HEX5_HEX4_BASE;
+	int score = num;
+	
+	int result_3_0 = 0;
+	int result_5_4 = 0;
+	int remainder = 0;
+	int count = 0;
+	
+	int seven_seg_decode_table[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x67}; // 0-9
+	
+	while (score > 0){
+		score = score / 10;
+		count++;
+	}
+	for (int i = 0; i < count; i++){
+		remainder = num % 10;
+		//printf("%d\n The remainder is: ", remainder);
+		num = num / 10;
+		
+		if(i < 4){
+			result_3_0 = ((seven_seg_decode_table[remainder] << (8 * i)) | result_3_0);
+		}
+		else if(i >= 4){
+			result_5_4 = ((seven_seg_decode_table[remainder] << (8 * (i - 4))) | result_5_4);
+		}
+		else if(i > 5){
+			continue; // NEED TO SHOW THAT THEY BEAT THE GAME HERE
+		}
+	}
+	printf("The result 3 0 is: %d\n", result_3_0);
+	printf("The result 4 5 is: %d\n", result_5_4);
+	*(HEX3_0_ptr) = result_3_0;
+	*(HEX5_4_ptr) = result_5_4;
+}
+	
+		
+	
+
 
 void config_timer(){
 	volatile int *TIMER_ptr = (int *) TIMER_BASE;
@@ -618,5 +668,3 @@ void the_reset(void)
 }
 
 */
-
-
