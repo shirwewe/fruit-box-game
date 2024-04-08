@@ -681,27 +681,27 @@ int main(void){
 
     while (1)
     {	
-        gameTime++;
-        printf("GameTime is now: %d \n", gameTime);
+      gameTime++;
+      printf("GameTime is now: %d \n", gameTime);
 
-		// erases basket that was drawn in the last iteration
-		erase_basket(prev_prev_basket_x, prev_prev_basket_y);
-		prev_prev_basket_x = prev_basket_x;
-		prev_prev_basket_y = prev_basket_y;
-		prev_basket_x = basket_x_pos;
-		prev_basket_y = basket_y_pos;
+		    // erases basket that was drawn in the last iteration
+		  erase_basket(prev_prev_basket_x, prev_prev_basket_y);
+		  prev_prev_basket_x = prev_basket_x;
+		  prev_prev_basket_y = prev_basket_y;
+		  prev_basket_x = basket_x_pos;
+		  prev_basket_y = basket_y_pos;
 
-        for (int i = 0; i <= num_fruits_onScreen; i++){
-            /* Erase any fruits and baskets that were drawn in the last iteration */
-		    erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
-            prev_prev_fruit_y[i] = prev_fruit_y[i];
+      for (int i = 0; i <= num_fruits_onScreen; i++){
+         /* Erase any fruits and baskets that were drawn in the last iteration */
+		  erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
+        prev_prev_fruit_y[i] = prev_fruit_y[i];
 		    prev_prev_fruit_x[i] = prev_fruit_x[i];
 		    prev_fruit_y[i] = fruit_y_pos[i];
 		    prev_fruit_x[i] = fruit_x_pos[i];
 		
 		    prev_prev_rand_fruit[i] = prev_rand_fruit[i];
 		    prev_rand_fruit[i] = rand_fruit[i];
-            printf("Pass test 2,erease \n");
+        printf("Pass test 2,erease \n");
         }
 		
 
@@ -739,7 +739,7 @@ int main(void){
         for (int i = 0; i <= num_fruits_onScreen; ++i){
 
             if (rand_fruit[i] == 9){
-                printf("bomb generated. \n");
+                printf("THis is the BOMB. \n");
                 if(fruit_x_pos[i] > basket_x_pos && fruit_x_pos[i] < basket_x_pos + BASKET_WIDTH && 
                     fruit_y_pos[i] == RESOLUTION_Y - BASKET_HEIGHT){
 			        display_HEX(total_score);
@@ -861,8 +861,8 @@ void initializer(){
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
 	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
 	total_score = 0;
-    num_fruits_onScreen = 0;
-	drop_speed = 5;
+    num_fruits_onScreen = 1;
+	drop_speed = 1;
 	missed_fruit = 0;
     for (int i = 0; i < Maxfruit_onScreen; ++i){
         rand_fruit[i] = rand() % 10;
