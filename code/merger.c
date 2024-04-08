@@ -18,19 +18,30 @@ int basket_x_pos;
 int prev_basket_x, prev_basket_y; 	// x, y coordinates of boxes to draw
 int prev_prev_basket_x, prev_prev_basket_y; 	// x, y coordinates of boxes to draw
 
-int fruit_y_pos;
-int fruit_x_pos;
+int fruit_y_pos_s;
+int fruit_x_pos_s;
 
-int prev_fruit_x, prev_fruit_y; 	// x, y coordinates of boxes to draw
-int prev_prev_fruit_x, prev_prev_fruit_y; 	// x, y coordinates of boxes to draw
+int prev_fruit_x_s, prev_fruit_y_s; 	// x, y coordinates of boxes to draw
+int prev_prev_fruit_x_s, prev_prev_fruit_y_s; 	// x, y coordinates of boxes to draw
 
-int rand_fruit;
-int prev_rand_fruit;
-int prev_prev_rand_fruit;
+int rand_fruit_s;
+int prev_rand_fruit_s;
+int prev_prev_rand_fruit_s;
 int drop_speed;
 int missed_fruit;
 int gameTime;
 int num_fruits_onScreen;
+
+int fruit_y_pos_s[Maxfruit_onScreen];
+int fruit_x_pos_s[Maxfruit_onScreen];
+
+
+int prev_fruit_x_s[Maxfruit_onScreen], prev_fruit_y_s[Maxfruit_onScreen]; 	// x, y coordinates of boxes to draw
+int prev_prev_fruit_x_s[Maxfruit_onScreen], prev_prev_fruit_y_s[Maxfruit_onScreen]; 	// x, y coordinates of boxes to draw
+
+int rand_fruit_S[Maxfruit_onScreen];
+int prev_rand_fruit_s[Maxfruit_onScreen];
+int prev_prev_rand_fruit_s[Maxfruit_onScreen];
 
 int survival;
 int main_menu;
@@ -178,23 +189,23 @@ int main(void){
 
                 for (int i = 0; i < num_fruits_onScreen; i++){
                 /* Erase any fruits and baskets that were drawn in the last iteration */
-		        erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
-                prev_prev_fruit_y[i] = prev_fruit_y[i];
-		        prev_prev_fruit_x[i] = prev_fruit_x[i];
-		        prev_fruit_y[i] = fruit_y_pos[i];
-		        prev_fruit_x[i] = fruit_x_pos[i];
+		        erase_fruit(prev_prev_fruit_x_s[i], prev_prev_fruit_y_s[i], fruit_width[prev_prev_rand_fruit_s[i]], fruit_height[prev_prev_rand_fruit_s[i]]);
+                prev_prev_fruit_y_s[i] = prev_fruit_y_s[i];
+		        prev_prev_fruit_x_s[i] = prev_fruit_x_s[i];
+		        prev_fruit_y_s[i] = fruit_y_pos_s[i];
+		        prev_fruit_x_s[i] = fruit_x_pos_s[i];
 		
-		        prev_prev_rand_fruit[i] = prev_rand_fruit[i];
-		        prev_rand_fruit[i] = rand_fruit[i];
+		        prev_prev_rand_fruit_s[i] = prev_rand_fruit_s[i];
+		        prev_rand_fruit_s[i] = rand_fruit_s[i];
                 printf("Pass test 2,erease \n");
                 }
 
                 draw_basket(basket_x_pos, basket_y_pos);
 
                 for (int i = 0; i < num_fruits_onScreen; ++i){
-		            draw_fruit(fruit_x_pos[i], fruit_y_pos[i], fruit_width[rand_fruit[i]], fruit_height[rand_fruit[i]], fruit_map[rand_fruit[i]]);
+		            draw_fruit(fruit_x_pos_s[i], fruit_y_pos_s[i], fruit_width[rand_fruit_s[i]], fruit_height[rand_fruit_s[i]], fruit_map[rand_fruit_s[i]]);
                     //update next fruit location due to timer
-		            fruit_y_pos[i] = fruit_y_pos[i] + drop_speed;
+		            fruit_y_pos_s[i] = fruit_y_pos_s[i] + drop_speed;
                     //printf("Pass test 3, draw \n");
                 }
 
@@ -204,40 +215,40 @@ int main(void){
 		        }
 
                 for (int i = 0; i < num_fruits_onScreen; ++i){
-                    if (rand_fruit[i] == 9){
+                    if (rand_fruit_s[i] == 9){
                         printf("This is BOMB. \n");
-                        if(fruit_x_pos[i] > basket_x_pos && fruit_x_pos[i] < basket_x_pos + BASKET_WIDTH && 
-                            fruit_y_pos[i] == RESOLUTION_Y - BASKET_HEIGHT){
+                        if(fruit_x_pos_s[i] > basket_x_pos && fruit_x_pos_s[i] < basket_x_pos + BASKET_WIDTH && 
+                            fruit_y_pos_s[i] == RESOLUTION_Y - BASKET_HEIGHT){
 			                display_HEX(total_score);
                             printf("The total score is: %d\n ", total_score);
 				            draw_game_over();
 				            return 0;
-		                }else if(fruit_y_pos[i] > RESOLUTION_Y - BASKET_HEIGHT/2){
+		                }else if(fruit_y_pos_s[i] > RESOLUTION_Y - BASKET_HEIGHT/2){
                             printf("Nice! U didnt get the bomb\n");
-                            erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
-			                erase_fruit(prev_fruit_x[i], prev_fruit_y[i], fruit_width[prev_rand_fruit[i]], fruit_height[prev_rand_fruit[i]]);
-			                erase_fruit(fruit_x_pos[i], fruit_y_pos[i], fruit_width[rand_fruit[i]], fruit_height[rand_fruit[i]]);
+                            erase_fruit(prev_prev_fruit_x_s[i], prev_prev_fruit_y_s[i], fruit_width[prev_prev_rand_fruit_s[i]], fruit_height[prev_prev_rand_fruit_s[i]]);
+			                erase_fruit(prev_fruit_x_s[i], prev_fruit_y_s[i], fruit_width[prev_rand_fruit_s[i]], fruit_height[prev_rand_fruit_s[i]]);
+			                erase_fruit(fruit_x_pos_s[i], fruit_y_pos_s[i], fruit_width[rand_fruit_s[i]], fruit_height[rand_fruit_s[i]]);
 			                
                             //continue;
                         }
               
                     }else{
-		                if(fruit_x_pos[i] > basket_x_pos && fruit_x_pos[i] < basket_x_pos + BASKET_WIDTH && 
-                            fruit_y_pos[i] == RESOLUTION_Y - BASKET_HEIGHT){
+		                if(fruit_x_pos_s[i] > basket_x_pos && fruit_x_pos_s[i] < basket_x_pos + BASKET_WIDTH && 
+                            fruit_y_pos_s[i] == RESOLUTION_Y - BASKET_HEIGHT){
                             total_score += 100;
 			                printf("The total score is: %d\n ", total_score);
 			                display_HEX(total_score);
-			                erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
-			                erase_fruit(prev_fruit_x[i], prev_fruit_y[i], fruit_width[prev_rand_fruit[i]], fruit_height[prev_rand_fruit[i]]);
-			                erase_fruit(fruit_x_pos[i], fruit_y_pos[i], fruit_width[rand_fruit[i]], fruit_height[rand_fruit[i]]);
+			                erase_fruit(prev_prev_fruit_x_s[i], prev_prev_fruit_y_s[i], fruit_width[prev_prev_rand_fruit_s[i]], fruit_height[prev_prev_rand_fruit_s[i]]);
+			                erase_fruit(prev_fruit_x_s[i], prev_fruit_y_s[i], fruit_width[prev_rand_fruit_s[i]], fruit_height[prev_rand_fruit_s[i]]);
+			                erase_fruit(fruit_x_pos_s[i], fruit_y_pos_s[i], fruit_width[rand_fruit_s[i]], fruit_height[rand_fruit_s[i]]);
 			                //continue;
 		                }// drops a different fruit at a new location after the fruit hits the bottom of the screen
-                        else if(fruit_y_pos[i] > RESOLUTION_Y - BASKET_HEIGHT/2){
+                        else if(fruit_y_pos_s[i] > RESOLUTION_Y - BASKET_HEIGHT/2){
                             missed_fruit++;
                             //printf("You missed %d fruits\n", missed_fruit);
-			                erase_fruit(prev_prev_fruit_x[i], prev_prev_fruit_y[i], fruit_width[prev_prev_rand_fruit[i]], fruit_height[prev_prev_rand_fruit[i]]);
-			                erase_fruit(prev_fruit_x[i], prev_fruit_y[i], fruit_width[prev_rand_fruit[i]], fruit_height[prev_rand_fruit[i]]);
-			                erase_fruit(fruit_x_pos[i], fruit_y_pos[i], fruit_width[rand_fruit[i]], fruit_height[rand_fruit[i]]);
+			                erase_fruit(prev_prev_fruit_x_s[i], prev_prev_fruit_y_s[i], fruit_width[prev_prev_rand_fruit_s[i]], fruit_height[prev_prev_rand_fruit_s[i]]);
+			                erase_fruit(prev_fruit_x_s[i], prev_fruit_y_s[i], fruit_width[prev_rand_fruit_s[i]], fruit_height[prev_rand_fruit_s[i]]);
+			                erase_fruit(fruit_x_pos_s[i], fruit_y_pos_s[i], fruit_width[rand_fruit_s[i]], fruit_height[rand_fruit_s[i]]);
                         }
                     }//end of else 
             
@@ -245,19 +256,19 @@ int main(void){
                 
                 if (gameTime % 35 == 0 && num_fruits_onScreen < Maxfruit_onScreen) {
                     //int new_fruit = num_fruits_onScreen++;
-                    rand_fruit[num_fruits_onScreen] = rand() % 10;	
-                    fruit_y_pos[num_fruits_onScreen] = 0;
-	                fruit_x_pos[num_fruits_onScreen] = rand() % (RESOLUTION_X - 1);
-                    printf("generate %d\n", rand_fruit[num_fruits_onScreen]); 
+                    rand_fruit_s[num_fruits_onScreen] = rand() % 10;	
+                    fruit_y_pos_s[num_fruits_onScreen] = 0;
+	                fruit_x_pos_s[num_fruits_onScreen] = rand() % (RESOLUTION_X - 1);
+                    printf("generate %d\n", rand_fruit_s[num_fruits_onScreen]); 
                     num_fruits_onScreen ++;   
                     /*
                     for (int i = 0; i < Maxfruit_onScreen; ++i){                
-                        rand_fruit[i] = rand() % 10;	
-	                    fruit_y_pos[i] = 0;
-	                    fruit_x_pos[i] = rand() % (RESOLUTION_X - fruit_width[rand_fruit[i]]);
+                        rand_fruit_s[i] = rand() % 10;	
+	                    fruit_y_pos_s[i] = 0;
+	                    fruit_x_pos_s[i] = rand() % (RESOLUTION_X - fruit_width[rand_fruit_s[i]]);
                         fruit_drop_delay[i] = (rand() % 5) + 1;//
 
-	                    printf("generate %d\n", rand_fruit);
+	                    printf("generate %d\n", rand_fruit_s);
                         num_fruits_onScreen++;
                         break; // only add one?
                     }
@@ -279,18 +290,18 @@ int main(void){
 				prev_basket_y = basket_y_pos;
 
 				/* Erase any fruits and baskets that were drawn in the last iteration */
-				erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[prev_prev_rand_fruit], fruit_height[prev_prev_rand_fruit]);
-				prev_prev_fruit_y = prev_fruit_y;
-				prev_prev_fruit_x = prev_fruit_x;
-				prev_fruit_y = fruit_y_pos;
-				prev_fruit_x = fruit_x_pos;
+				erase_fruit(prev_prev_fruit_x_s, prev_prev_fruit_y_s, fruit_width[prev_prev_rand_fruit_s], fruit_height[prev_prev_rand_fruit_s]);
+				prev_prev_fruit_y_s = prev_fruit_y_s;
+				prev_prev_fruit_x_s = prev_fruit_x_s;
+				prev_fruit_y_s = fruit_y_pos_s;
+				prev_fruit_x_s = fruit_x_pos_s;
 
-				prev_prev_rand_fruit = prev_rand_fruit;
-				prev_rand_fruit = rand_fruit;
+				prev_prev_rand_fruit_s = prev_rand_fruit_s;
+				prev_rand_fruit_s = rand_fruit_s;
 
 				// draws new basket and fruit location
 				draw_basket(basket_x_pos, basket_y_pos);
-				draw_fruit(fruit_x_pos, fruit_y_pos, fruit_width[rand_fruit], fruit_height[rand_fruit], fruit_map[rand_fruit]);
+				draw_fruit(fruit_x_pos_s, fruit_y_pos_s, fruit_width[rand_fruit_s], fruit_height[rand_fruit_s], fruit_map[rand_fruit_s]);
 
 				// draws x's
 				if (missed_fruit == 0){
@@ -318,39 +329,39 @@ int main(void){
 					break;
 				}
 				//update next fruit location due to timer
-				fruit_y_pos = fruit_y_pos + drop_speed;
+				fruit_y_pos_s = fruit_y_pos_s + drop_speed;
 
 				if ((*(TIMER_ptr) & 0x1) == 1){
 					*TIMER_ptr = 0; //reset t0
 					drop_speed++;
 				}
 				// if a catch is registered
-				if(fruit_x_pos > basket_x_pos && fruit_x_pos < basket_x_pos + BASKET_WIDTH && fruit_y_pos == RESOLUTION_Y - BASKET_HEIGHT){
+				if(fruit_x_pos_s > basket_x_pos && fruit_x_pos_s < basket_x_pos + BASKET_WIDTH && fruit_y_pos_s == RESOLUTION_Y - BASKET_HEIGHT){
 					audio_playback_mono(fruit_caught, fruit_caught_samples, 0);
 					total_score += 100;
 					display_HEX(total_score);
-					erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[prev_prev_rand_fruit], fruit_height[prev_prev_rand_fruit]);
-					erase_fruit(prev_fruit_x, prev_fruit_y, fruit_width[prev_rand_fruit], fruit_height[prev_rand_fruit]);
-					erase_fruit(fruit_x_pos, fruit_y_pos, fruit_width[rand_fruit], fruit_height[rand_fruit]);
+					erase_fruit(prev_prev_fruit_x_s, prev_prev_fruit_y_s, fruit_width[prev_prev_rand_fruit_s], fruit_height[prev_prev_rand_fruit_s]);
+					erase_fruit(prev_fruit_x_s, prev_fruit_y_s, fruit_width[prev_rand_fruit_s], fruit_height[prev_rand_fruit_s]);
+					erase_fruit(fruit_x_pos_s, fruit_y_pos_s, fruit_width[rand_fruit_s], fruit_height[rand_fruit_s]);
 
-					rand_fruit = rand() % 8;	
-					fruit_y_pos = 0;
-					fruit_x_pos = rand() % (RESOLUTION_X - 1);
+					rand_fruit_s = rand() % 8;	
+					fruit_y_pos_s = 0;
+					fruit_x_pos_s = rand() % (RESOLUTION_X - 1);
 					//continue;
 
 				}
 
 				// drops a different fruit at a new location after the fruit hits the bottom of the screen
-				else if(fruit_y_pos > RESOLUTION_Y - BASKET_HEIGHT/2){
+				else if(fruit_y_pos_s > RESOLUTION_Y - BASKET_HEIGHT/2){
 					audio_playback_mono(fruit_miss, fruit_miss_samples, 0);
 					missed_fruit++;
-					erase_fruit(prev_prev_fruit_x, prev_prev_fruit_y, fruit_width[prev_prev_rand_fruit], fruit_height[prev_prev_rand_fruit]);
-					erase_fruit(prev_fruit_x, prev_fruit_y, fruit_width[prev_rand_fruit], fruit_height[prev_rand_fruit]);
-					erase_fruit(fruit_x_pos, fruit_y_pos, fruit_width[rand_fruit], fruit_height[rand_fruit]);
+					erase_fruit(prev_prev_fruit_x_s, prev_prev_fruit_y_s, fruit_width[prev_prev_rand_fruit_s], fruit_height[prev_prev_rand_fruit_s]);
+					erase_fruit(prev_fruit_x_s, prev_fruit_y_s, fruit_width[prev_rand_fruit_s], fruit_height[prev_rand_fruit_s]);
+					erase_fruit(fruit_x_pos_s, fruit_y_pos_s, fruit_width[rand_fruit_s], fruit_height[rand_fruit_s]);
 
-					rand_fruit = rand() % 8;	
-					fruit_y_pos = 0;
-					fruit_x_pos = rand() % (RESOLUTION_X - 1);
+					rand_fruit_s = rand() % 8;	
+					fruit_y_pos_s = 0;
+					fruit_x_pos_s = rand() % (RESOLUTION_X - 1);
 
 				}
 
@@ -493,12 +504,12 @@ void erase_all_text(){
 
 
 void initializer(){
-	rand_fruit = rand() % 8;
+	rand_fruit_s = rand() % 8;
 	// initialzies basket start position
 	basket_y_pos = RESOLUTION_Y - BASKET_HEIGHT;
 	basket_x_pos = (RESOLUTION_X/2) - (BASKET_WIDTH/2);
-	fruit_y_pos = 0;
-	fruit_x_pos = rand() % (RESOLUTION_X - 1);
+	fruit_y_pos_s = 0;
+	fruit_x_pos_s = rand() % (RESOLUTION_X - 1);
 	total_score = 0;
 	drop_speed = 1;
 	missed_fruit = 0;

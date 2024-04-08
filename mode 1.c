@@ -7,7 +7,7 @@
 /* This files provides address values that exist in the system */
 
 #include <stdlib.h>
-#include <graphicd.h>
+#include <graphics.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdbool.h>
