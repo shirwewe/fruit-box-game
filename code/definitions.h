@@ -57,3 +57,4 @@ do { dest = __builtin_rdctl(5); } while (0)
 #define TRUE 1
 	
 #define COUNTER_VALUE 10000000000
+#define Maxfruit_onScreen 5
