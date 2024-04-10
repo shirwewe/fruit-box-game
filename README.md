@@ -3,8 +3,6 @@
 ## Description: 
 The Fruit Box Game is a game where fruit drops at random on the screen and the user uses a basket to catch the fruit. 
 
-**Days Left Till Deadline: 9 DAYS**
-
 ## Timeline:
 - March 16
   - Drew a basket on the screen
@@ -28,6 +26,15 @@ The Fruit Box Game is a game where fruit drops at random on the screen and the u
   - missing three fruit -> game over
 
     ![3-29-2024 (23-27-07)](https://github.com/shirwewe/fruit-box-game/assets/129631836/bb504824-2cf8-4d03-a8bb-55b026d48eaf)
+
+- April 6
+    - Made starting page
+    - Hex displays scores
+    - led flashes when fruit misses
+    - changing modes
+ 
+      ![4-07-2024 (03-55-10)](https://github.com/shirwewe/fruit-box-game/assets/129631836/be222694-f236-4cae-ab53-afe0ce4d55d9)
+
 
 
  
