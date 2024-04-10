@@ -66,7 +66,5 @@ https://github.com/shirwewe/fruit-box-game
     - Leaderboard (flop), the main goal was to get the character display working I did not make a functional leaderboard updating system
 - Yaqi
     - Main menu page, game over page integration
-    - 
-    - 
-    - 
-    - 
+    - Design the game mode of survival, randomly dropping fruits on the screen, including the bomb.
+    - Draw multiple fruits on the screen and design the logic of game over with the bomb, the mode is kind of working, but it does not operate well due to the time cycles.
